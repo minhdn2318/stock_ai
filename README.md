@@ -92,9 +92,6 @@ Note: Accuracy varies based on market conditions, volatility, and the specific s
 pip install streamlit pandas numpy matplotlib sklearn xgboost tensorflow yfinance newsapi-python statsmodels
 ```
 
-### Configuration
-1. Get a News API key from https://newsapi.org
-2. Replace the `NEWS_API_KEY` in the code with your API key
 
 ### Running the Application
 ```bash
