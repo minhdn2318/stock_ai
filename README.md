@@ -1,9 +1,11 @@
 # Multi-Algorithm Stock Predictor
 
 ## 🚀 Overview
+
 The Multi-Algorithm Stock Predictor is an advanced stock price prediction system that leverages multiple machine learning algorithms and technical indicators to generate ensemble predictions for stock market movements. Built with Streamlit, this application combines seven different prediction models, technical analysis, and real-time news sentiment to provide comprehensive trading insights.
 
 ## ✨ Key Features
+
 - Ensemble predictions from 7 different algorithms
 - Real-time stock data integration via yfinance
 - Live news sentiment analysis
@@ -14,6 +16,7 @@ The Multi-Algorithm Stock Predictor is an advanced stock price prediction system
 - Customizable timeframe analysis
 
 ## 🤖 Prediction Models
+
 The system employs seven different prediction models, each with its own strengths:
 
 1. **LSTM (Long Short-Term Memory)** - Weight: 30%
@@ -59,7 +62,9 @@ The system employs seven different prediction models, each with its own strength
    - Best for 1-2 day predictions
 
 ## 📊 Technical Indicators
+
 The system calculates and utilizes multiple technical indicators:
+
 - Moving Averages (5, 20, 50, 200 days)
 - RSI (Relative Strength Index)
 - MACD (Moving Average Convergence Divergence)
@@ -73,6 +78,7 @@ The system calculates and utilizes multiple technical indicators:
 - Momentum Indicators
 
 ## 🎯 Prediction Accuracy
+
 - Short-term (1-3 days): 65-75% directional accuracy
 - Medium-term (4-7 days): 60-70% directional accuracy
 - Long-term (8+ days): 55-65% directional accuracy
@@ -80,6 +86,7 @@ The system calculates and utilizes multiple technical indicators:
 Note: Accuracy varies based on market conditions, volatility, and the specific stock being analyzed.
 
 ## ⚡ Performance Considerations
+
 - Best suited for liquid stocks with high trading volume
 - More accurate during normal market conditions vs extreme volatility
 - Higher accuracy for large-cap stocks vs small-cap stocks
@@ -88,12 +95,13 @@ Note: Accuracy varies based on market conditions, volatility, and the specific s
 ## 🛠️ Setup and Installation
 
 ### Prerequisites
+
 ```bash
 pip install streamlit pandas numpy matplotlib sklearn xgboost tensorflow yfinance newsapi-python statsmodels
 ```
 
-
 ### Running the Application
+
 ```bash
 streamlit run stock_predictor_main.py
 ```
@@ -101,6 +109,7 @@ streamlit run stock_predictor_main.py
 ## 💡 Usage Guidelines
 
 ### Best Practices
+
 1. Use longer training periods (5+ years) for more stable predictions
 2. Focus on liquid stocks with consistent trading history
 3. Consider multiple timeframes for confirmation
@@ -108,6 +117,7 @@ streamlit run stock_predictor_main.py
 5. Monitor prediction confidence scores and risk assessments
 
 ### Risk Management
+
 - Use the confidence score to gauge prediction reliability
 - Consider the prediction range (upper and lower bounds)
 - Monitor the model consensus strength
@@ -117,6 +127,7 @@ streamlit run stock_predictor_main.py
 ## 📈 Trading Signals
 
 The system generates trading signals based on:
+
 1. **Price Change Percentage**
    - Strong signals: >10% predicted change
    - Moderate signals: 3-10% predicted change
@@ -129,6 +140,7 @@ The system generates trading signals based on:
    - Low confidence: <0.6
 
 ## ⚠️ Limitations
+
 1. Cannot predict black swan events or unexpected news
 2. Less accurate during periods of extreme market volatility
 3. Requires quality historical data for accurate predictions
@@ -136,6 +148,7 @@ The system generates trading signals based on:
 5. Past performance doesn't guarantee future results
 
 ## 🔄 Future Improvements
+
 1. Integration of sentiment analysis from social media (Twitter)
 2. Addition of more sophisticated deep learning models
 3. Enhanced feature engineering capabilities
