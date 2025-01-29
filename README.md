@@ -98,7 +98,7 @@ pip install streamlit pandas numpy matplotlib sklearn xgboost tensorflow yfinanc
 
 ### Running the Application
 ```bash
-streamlit run stock_predictor.py
+streamlit run stock_predictor_main.py
 ```
 
 ## 💡 Usage Guidelines
