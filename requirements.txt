@@ -8,3 +8,4 @@ tensorflow
 statsmodels
 newsapi-python
 yfinance
+vnstock

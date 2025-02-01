@@ -15,9 +15,7 @@ from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import LSTM, Dense, Dropout, Bidirectional
 from tensorflow.keras.callbacks import EarlyStopping
 from newsapi import NewsApiClient
-from vnstock import Vnstock
 import yfinance as yf
-import plotly.graph_objects as go
 import logging
 
 tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
@@ -55,12 +53,11 @@ logging.basicConfig(
 
 # Cache functions remain the same as in original code
 @st.cache_data(ttl=3600)
-def fetch_stock_data_from_yahoo_finance(symbol, days):
+def fetch_stock_data(symbol, days):
     end_date = datetime.now()
     start_date = end_date - timedelta(days=days)
     logging.info(f"Fetching stock data for {symbol} from {start_date.date()} to {end_date.date()}...")
     df = yf.download(symbol, start=start_date, end=end_date)
-
      # In log kết quả
     if df.empty:
         logging.warning("No data was fetched. Please check the symbol or date range.")
@@ -69,27 +66,6 @@ def fetch_stock_data_from_yahoo_finance(symbol, days):
         logging.info(f"Last 5 rows of the data:\n{df.tail()}")
         # st.write(df.tail())
     return df
-
-# Cache functions remain the same as in original code
-@st.cache_data(ttl=3600)
-def fetch_stock_data_from_vnstock(symbol, days):
-    end_date = datetime.now()
-    start_date = end_date - timedelta(days=days)
-    logging.info(f"Fetching stock data for {symbol} from {start_date.date()} to {end_date.date()}...")
-    symbol_vnstock = symbol.split('.')[0]  # Giữ phần trước dấu chấm
-    stock = Vnstock().stock(symbol=symbol_vnstock, source="TCBS")
-    df = stock.quote.history(start=start_date.strftime("%Y-%m-%d"), end=end_date.strftime("%Y-%m-%d"))
-
-     # In log kết quả
-    if df.empty:
-        logging.warning("No data was fetched. Please check the symbol or date range.")
-    else:
-        logging.info(f"Successfully fetched {len(df)} rows of data for {symbol}.")
-        logging.info(f"Last 5 rows of the data from Vnstock:\n{df.tail()}")
-        # st.write(df.tail())
-    return df
-
-
 # test api key 
 @st.cache_data(ttl=3600)
 def get_news_headlines(symbol):
@@ -109,22 +85,22 @@ def calculate_technical_indicators_for_summary(df):
         analysis_df = df.copy()
         
         # Calculate Moving Averages
-        analysis_df['MA20'] = analysis_df['close'].rolling(window=20).mean()
-        analysis_df['MA50'] = analysis_df['close'].rolling(window=50).mean()
+        analysis_df['MA20'] = analysis_df['Close'].rolling(window=20).mean()
+        analysis_df['MA50'] = analysis_df['Close'].rolling(window=50).mean()
         
         # Calculate RSI
-        delta = analysis_df['close'].diff()
+        delta = analysis_df['Close'].diff()
         gain = (delta.where(delta > 0, 0)).rolling(window=14).mean()
         loss = (-delta.where(delta < 0, 0)).rolling(window=14).mean()
         rs = gain / loss
         analysis_df['RSI'] = 100 - (100 / (1 + rs))
         
         # Calculate Volume MA
-        analysis_df['Volume_MA'] = analysis_df['volume'].rolling(window=20).mean()
+        analysis_df['Volume_MA'] = analysis_df['Volume'].rolling(window=20).mean()
         
         # Calculate Bollinger Bands
-        ma20 = analysis_df['close'].rolling(window=20).mean()
-        std20 = analysis_df['close'].rolling(window=20).std()
+        ma20 = analysis_df['Close'].rolling(window=20).mean()
+        std20 = analysis_df['Close'].rolling(window=20).std()
         analysis_df['BB_upper'] = ma20 + (std20 * 2)
         analysis_df['BB_lower'] = ma20 - (std20 * 2)
         analysis_df['BB_middle'] = ma20
@@ -138,7 +114,7 @@ class MultiAlgorithmStockPredictor:
         self.scaler = MinMaxScaler(feature_range=(0, 1))
         self.weights = weights if weights is not None else WEIGHT_CONFIGURATIONS["Default"]
         
-    def fetch_historical_data_from_yahoo(self):
+    def fetch_historical_data(self):
         # Same as original EnhancedStockPredictor
         end_date = datetime.now()
         start_date = end_date - timedelta(days=365 * self.training_years)
@@ -153,42 +129,25 @@ class MultiAlgorithmStockPredictor:
             st.error(f"Error fetching data: {str(e)}")
             return yf.download(self.symbol, period="max")
 
-    def fetch_historical_data_from_vnstock(self):
-        # Same as original EnhancedStockPredictor
-        end_date = datetime.now()
-        start_date = end_date - timedelta(days=365 * self.training_years)
-        
-        try:
-            symbol_vnstock = self.symbol.split('.')[0]  # Giữ phần trước dấu chấm
-            stock = Vnstock().stock(symbol=symbol_vnstock, source="TCBS")
-            df = stock.quote.history(start=start_date.strftime("%Y-%m-%d"), end=end_date.strftime("%Y-%m-%d"))
-
-            if df.empty:
-                st.warning(f"Data for the last {self.training_years} years is unavailable. Fetching maximum available data instead.")
-            return df
-        except Exception as e:
-            st.error(f"Error fetching data: {str(e)}")
-            return df
-    
     # Technical indicators calculation methods remain the same
     def calculate_technical_indicators(self, df):
         # Original technical indicators remain the same
-        df['MA5'] = df['close'].rolling(window=5).mean()
-        df['MA20'] = df['close'].rolling(window=20).mean()
-        df['MA50'] = df['close'].rolling(window=50).mean()
-        df['MA200'] = df['close'].rolling(window=200).mean()
-        df['RSI'] = self.calculate_rsi(df['close'])
-        df['MACD'] = self.calculate_macd(df['close'])
-        df['ROC'] = df['close'].pct_change(periods=10) * 100
+        df['MA5'] = df['Close'].rolling(window=5).mean()
+        df['MA20'] = df['Close'].rolling(window=20).mean()
+        df['MA50'] = df['Close'].rolling(window=50).mean()
+        df['MA200'] = df['Close'].rolling(window=200).mean()
+        df['RSI'] = self.calculate_rsi(df['Close'])
+        df['MACD'] = self.calculate_macd(df['Close'])
+        df['ROC'] = df['Close'].pct_change(periods=10) * 100
         df['ATR'] = self.calculate_atr(df)
-        df['BB_upper'], df['BB_lower'] = self.calculate_bollinger_bands(df['close'])
-        df['Volume_MA'] = df['volume'].rolling(window=20).mean()
-        df['Volume_Rate'] = df['volume'] / df['volume'].rolling(window=20).mean()
+        df['BB_upper'], df['BB_lower'] = self.calculate_bollinger_bands(df['Close'])
+        df['Volume_MA'] = df['Volume'].rolling(window=20).mean()
+        df['Volume_Rate'] = df['Volume'] / df['Volume'].rolling(window=20).mean()
         
         # Additional technical indicators
-        df['EMA12'] = df['close'].ewm(span=12, adjust=False).mean()
-        df['EMA26'] = df['close'].ewm(span=26, adjust=False).mean()
-        df['MOM'] = df['close'].diff(10)
+        df['EMA12'] = df['Close'].ewm(span=12, adjust=False).mean()
+        df['EMA26'] = df['Close'].ewm(span=26, adjust=False).mean()
+        df['MOM'] = df['Close'].diff(10)
         df['STOCH_K'] = self.calculate_stochastic(df)
         df['WILLR'] = self.calculate_williams_r(df)
         
@@ -197,16 +156,16 @@ class MultiAlgorithmStockPredictor:
     
     @staticmethod
     def calculate_stochastic(df, period=14):
-        low_min = df['low'].rolling(window=period).min()
-        high_max = df['high'].rolling(window=period).max()
-        k = 100 * ((df['close'] - low_min) / (high_max - low_min))
+        low_min = df['Low'].rolling(window=period).min()
+        high_max = df['High'].rolling(window=period).max()
+        k = 100 * ((df['Close'] - low_min) / (high_max - low_min))
         return k
 
     @staticmethod
     def calculate_williams_r(df, period=14):
-        high_max = df['high'].rolling(window=period).max()
-        low_min = df['low'].rolling(window=period).min()
-        return -100 * ((high_max - df['close']) / (high_max - low_min))
+        high_max = df['High'].rolling(window=period).max()
+        low_min = df['Low'].rolling(window=period).min()
+        return -100 * ((high_max - df['Close']) / (high_max - low_min))
 
     # Original calculation methods remain the same
     @staticmethod
@@ -225,9 +184,9 @@ class MultiAlgorithmStockPredictor:
     
     @staticmethod
     def calculate_atr(df, period=14):
-        high_low = df['high'] - df['low']
-        high_close = np.abs(df['high'] - df['close'].shift())
-        low_close = np.abs(df['low'] - df['close'].shift())
+        high_low = df['High'] - df['Low']
+        high_close = np.abs(df['High'] - df['Close'].shift())
+        low_close = np.abs(df['Low'] - df['Close'].shift())
         ranges = pd.concat([high_low, high_close, low_close], axis=1)
         true_range = np.max(ranges, axis=1)
         return true_range.rolling(period).mean()
@@ -241,7 +200,7 @@ class MultiAlgorithmStockPredictor:
         return upper_band, lower_band
 
     def prepare_data(self, df, seq_length=60):
-        feature_columns = ['close', 'MA5', 'MA20', 'MA50', 'MA200', 'RSI', 'MACD', 
+        feature_columns = ['Close', 'MA5', 'MA20', 'MA50', 'MA200', 'RSI', 'MACD', 
                           'ROC', 'ATR', 'BB_upper', 'BB_lower', 'Volume_Rate',
                           'EMA12', 'EMA26', 'MOM', 'STOCH_K', 'WILLR']
         
@@ -276,14 +235,14 @@ class MultiAlgorithmStockPredictor:
         return model
 
     def train_arima(self, df):
-        model = ARIMA(df['close'], order=(5,1,0))
+        model = ARIMA(df['Close'], order=(5,1,0))
         return model.fit()
 
     def predict_with_all_models(self, prediction_days=30, sequence_length=60):
         try:
             # Fetch and prepare data
-            df = self.fetch_historical_data_from_vnstock()
-            logging.info(f"Successfully fetched {len(df)} rows of data for {self.symbol}.")
+            df = self.fetch_historical_data()
+            
             # Check if we have enough data
             if len(df) < sequence_length + 20:  # Need extra days for technical indicators
                 st.error(f"Insufficient historical data. Need at least {sequence_length + 20} days of data.")
@@ -302,7 +261,7 @@ class MultiAlgorithmStockPredictor:
                 return None
                 
             # Prepare features
-            feature_columns = ['close', 'MA5', 'MA20', 'MA50', 'MA200', 'RSI', 'MACD', 
+            feature_columns = ['Close', 'MA5', 'MA20', 'MA50', 'MA200', 'RSI', 'MACD', 
                             'ROC', 'ATR', 'BB_upper', 'BB_lower', 'Volume_Rate',
                             'EMA12', 'EMA26', 'MOM', 'STOCH_K', 'WILLR']
                             
@@ -395,11 +354,11 @@ class MultiAlgorithmStockPredictor:
 
             # Train and predict with ARIMA
             try:
-                close_prices = df['close'].values
+                close_prices = df['Close'].values
                 arima_model = ARIMA(close_prices, order=(5,1,0))
                 arima_fit = arima_model.fit()
                 arima_pred = arima_fit.forecast(steps=1)[0]
-                arima_scaled = (arima_pred - df['close'].mean()) / df['close'].std()
+                arima_scaled = (arima_pred - df['Close'].mean()) / df['Close'].std()
                 predictions['ARIMA'] = arima_scaled
             except Exception as e:
                 st.warning(f"ARIMA prediction failed: {str(e)}")
@@ -458,7 +417,7 @@ class MultiAlgorithmStockPredictor:
 
 # Streamlit interface
 
-symbol = st.text_input("Enter VietNam Stock Symbol (e.g., VND):", "VND")
+symbol = st.text_input("Enter Stock Symbol (e.g., VND.VN):", "VND.VN")
 display_days = st.slider("Select number of days to display", 30, 3650, 180)
 
 # Define different weight configurations
@@ -544,8 +503,8 @@ with col2:
 try:
     
     # Display stock price chart
-    # st.subheader("Stock Price Chart")
-    # st.line_chart(df['close'])
+    # st.subheader("Stock Price History")
+    # st.line_chart(df['Close'])
     
     # show info stock and weight
     col1, col2 = st.columns([1, 1])
@@ -558,58 +517,15 @@ try:
     with col2:
         st.subheader("Stock Price History")     
         # Fetch data
-        df = fetch_stock_data_from_vnstock(symbol, display_days)
+        df = fetch_stock_data(symbol, display_days)
         if df is not None and not df.empty:
             
             st.write(df.tail())
         else:
             st.warning("No stock data available.")
-
-    # Thêm CSS cho nút đẹp mắt với màu nhã nhặn và hiệu ứng nhấp nháy
-    st.markdown("""
-        <style>
-            .custom-button {
-                background-color: #4CAF50;  /* Màu xanh nhã nhặn */
-                color: white;
-                font-size: 18px;
-                padding: 15px 32px;
-                text-align: center;
-                text-decoration: none;
-                display: inline-block;
-                border-radius: 10px;
-                border: none;
-                cursor: pointer;
-                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-                animation: blink 1s linear infinite;  /* Hiệu ứng nhấp nháy */
-            }
-
-            .custom-button:hover {
-                background-color: #45a049;  /* Màu đậm hơn khi hover */
-                transform: scale(1.05);  /* Phóng to nhẹ khi hover */
-            }
-
-            .custom-button:active {
-                transform: scale(0.98);  /* Nhấn vào sẽ co lại một chút */
-            }
-
-            /* Hiệu ứng nhấp nháy */
-            @keyframes blink {
-                0% { background-color: #4CAF50; }
-                50% { background-color: #80C784; }
-                100% { background-color: #4CAF50; }
-            }
-        </style>
-    """, unsafe_allow_html=True)
-
-    # HTML cho nút tùy chỉnh
-    button_html = '<button class="custom-button">Generate Predictions</button>'
-
-    # Hiển thị nút với Streamlit
-    # st.markdown(button_html, unsafe_allow_html=True)
     col1, col2 = st.columns([1, 1])
     
     with col1:
-        
         if st.button("Generate Predictions"):
             with st.spinner("Training multiple models and generating predictions..."):
                 predictor = MultiAlgorithmStockPredictor(
@@ -621,7 +537,7 @@ try:
                 if results is not None:
                     
                     
-                    last_price = float(df['close'].iloc[-1])
+                    last_price = float(df['Close'].iloc[-1])
                     
                     
                     # Individual model predictions
@@ -637,36 +553,15 @@ try:
                         WEIGHT_CONFIGURATIONS[selected_weight].values()
                     )
                     model_predictions = model_predictions.sort_values('Predicted Price', ascending=False)
-                    currency = "VND"
-                    # if ".vn" in symbol.lower(): 
-                    #     currency = "VND"
+                    currency = "USD"
+                    if ".vn" in symbol.lower(): 
+                        currency = "VND"
                     st.dataframe(model_predictions.style.format({
-                        'Predicted Price': f'{{:.2f}} {currency}',
-                        'Deviation from Ensemble': f'{{:.2f}} {currency}',
+                        'Predicted Price': f'{{:.0f}} {currency}',
+                        'Deviation from Ensemble': f'{{:.0f}} {currency}',
                         'Weight': f'{{:.2f}}'
                     }))
-                    # Hiển thị tiêu đề
-                    st.subheader("🔥 Average Predicted Price")
-                    # Lấy dữ liệu chứng khoán và giá hiện tại
-                    current_price = df['close'].iloc[-1] if not df.empty else 0
-                    # Tính biên lợi nhuận
-                    profit_margin = (abs(results['prediction'] - current_price) / current_price) * 100 if current_price != 0 else 0
-                    # Hiển thị 3 cột với tiêu đề và giá trị
-                    col1, col2, col3 = st.columns(3)
-
-                    # Cột 1: Giá dự đoán
-                    with col1:
-                        st.metric(label="Predicted Price", value=f"{abs(results['prediction']):.2f} VND")
-
-                    # Cột 2: Giá hiện tại
-                    with col2:
-                        st.metric(label="Current Price", value=f"{current_price:.2f} VND")
-
-                    # Cột 3: Phần trăm biên lợi nhuận
-                    with col3:
-                        st.metric(label="Profit Margin (%)", value=f"{profit_margin:.2f}%")
-
-
+                    
                     # Trading signal with confidence
                     price_change = ((results['prediction'] - last_price) / last_price) * 100
                     
@@ -682,7 +577,7 @@ try:
                     ax.set_yticklabels(models)
                     ax.axvline(x=last_price, color='r', linestyle='--', label='Current Price')
                     ax.axvline(x=results['prediction'], color='g', linestyle='--', label='Ensemble Prediction')
-                    ax.set_xlabel('Price (VND*1000)')
+                    ax.set_xlabel('Price ($)')
                     ax.set_title('Model Predictions Comparison')
                     ax.legend()
                     
@@ -738,48 +633,13 @@ try:
                     
                     risk_col1, risk_col2 = st.columns(2)
                     with risk_col1:
-                        currency = "VND"
-                        # if ".vn" in symbol.lower(): 
-                        #     currency = "VND"
-                        st.metric("Prediction Volatility", f"{prediction_std:.2f} {currency}")
+                        currency = "USD"
+                        if ".vn" in symbol.lower(): 
+                            currency = "VND"
+                        st.metric("Prediction Volatility", f"{prediction_std:.0f} {currency}")
                     with risk_col2:
                         st.metric("Risk Level", risk_level)
     
-        ####-chart stock-############################################
-    # Đảm bảo 'Date' là kiểu datetime
-    df['Date'] = pd.to_datetime(df['time'])
-
-    # Vẽ biểu đồ với Matplotlib
-    fig, ax1 = plt.subplots(figsize=(10, 6))
-
-    # Đoạn này vẽ đường giá đóng cửa (Close Price)
-    ax1.plot(df['Date'], df['close'], color='blue', label='Close Price', linewidth=2)
-
-    # Tạo trục y thứ hai cho Volume
-    ax2 = ax1.twinx()
-    ax2.bar(df['Date'], df['volume'], color='gray', alpha=0.3, label='Volume', width=0.8)
-
-    # Cập nhật tiêu đề và nhãn cho các trục
-    ax1.set_xlabel('Date')
-    ax1.set_ylabel('Price (VND)', color='blue')
-    ax2.set_ylabel('Volume', color='gray')
-
-    # Cập nhật tiêu đề biểu đồ
-    ax1.set_title('Stock Price and Volume')
-
-    # Thêm legend cho cả hai trục
-    ax1.legend(loc='upper left')
-    ax2.legend(loc='upper right')
-
-    # Cải thiện hiển thị của trục x (ngày tháng)
-    fig.autofmt_xdate(rotation=45)  # Xoay ngày tháng để tránh bị chồng lên
-
-    # Hiển thị biểu đồ trong Streamlit
-    st.subheader("Stock Price Chart")
-    st.pyplot(fig)
-    ####-END-####################################################
-    # st.subheader("Stock Price Chart")
-    # st.line_chart(df['close'])
 except Exception as e:
     st.error(f"Error: {str(e)}")
     st.write("Detailed error information:", str(e))
