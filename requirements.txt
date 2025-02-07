@@ -1,11 +1,11 @@
+numpy==1.26.4
 pandas
-numpy
 streamlit
+extra_streamlit_components
 matplotlib
 scikit-learn
 xgboost
 tensorflow
 statsmodels
-newsapi-python
 yfinance
 vnstock
