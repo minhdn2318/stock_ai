@@ -1,3 +1,4 @@
+import os
 import pandas as pd
 import numpy as np
 import streamlit as st
@@ -12,6 +13,8 @@ import extra_streamlit_components as stx
 from models.predictor import MultiAlgorithmStockPredictor
 import weight_configurations
 
+
+# Cookie getter and setter functions
 def get_cookie(name):
     return cookie_manager.get(name)
 
@@ -70,6 +73,70 @@ cookie_manager = stx.CookieManager(key="my_cookie")
 variant = get_variant()
 
 
+# Run shadow test
+def run_shadow_test(selected_weight, user_variant, user_results, current_price):
+    # Shadow variant
+    shadow_variant = "A" if user_variant == "B" else "B"
+
+    # Calculate shadow predictions
+    SHADOW_WEIGHT_CONFIGURATIONS = (
+        weight_configurations.WEIGHT_CONFIGURATIONS
+        if user_variant == "B"
+        else weight_configurations.WEIGHT_CONFIGURATIONS_BETA
+    )
+
+    with st.spinner("Thank you for enabling the Shadow Test. Running the test..."):
+        shadow_predictions = MultiAlgorithmStockPredictor(
+            symbol, weights=SHADOW_WEIGHT_CONFIGURATIONS[selected_weight]
+        ).predict_with_all_models()
+
+    shadow_results = shadow_predictions["prediction"]
+    user_prediction = user_results["prediction"]
+
+    # Calculate the deviation
+    dev_shadow = abs(shadow_results - current_price)
+    dev_user = abs(user_prediction - current_price)
+
+    # Determine the conclusion
+    if dev_shadow == dev_user:
+        conclusion = "Tie as both predictions are equal, with the deviation of {:.2f}".format(
+            dev_shadow
+        )
+    elif dev_shadow < dev_user:
+        conclusion = "Shadow model wins with a deviation of {:.2f}".format(dev_shadow)
+    else:
+        conclusion = "User model wins with a deviation of {:.2f}".format(dev_user)
+
+    # CSV file path
+    SHADOW_LOG = "shadow_log.csv"
+
+    # Ensure CSV file exists
+    if not os.path.exists(SHADOW_LOG):
+        pd.DataFrame(
+            columns=[
+                "Time",
+                "User Variant & Perf",
+                "Shadow Variant & Perf",
+                "Current Price",
+                "Conclusion",
+            ]
+        ).to_csv(SHADOW_LOG, index=False)
+
+    # Append rating to CSV
+    new_entry = pd.DataFrame(
+        [
+            {
+                "Time": datetime.now(),
+                "User Variant & Perf": f"{user_variant} - {user_prediction:.2f}",
+                "Shadow Variant & Perf": f"{shadow_variant} - {shadow_results:.2f}",
+                "Current Price": current_price,
+                "Conclusion": conclusion
+            }
+        ]
+    )
+    new_entry.to_csv(SHADOW_LOG, mode="a", header=False, index=False)
+
+
 # Cache functions remain the same as in original code
 @st.cache_data(ttl=3600)
 def fetch_stock_data_from_yahoo_finance(symbol, days):
@@ -117,7 +184,7 @@ show_variant_version = st.write(f"System Variant: {variant}")
 
 if variant == "B":
     st.warning(
-        "🚨 You are currently using Variant B of the application. This variant focuses more on LSTM and tree-based algorithms." 
+        "🚨 You are currently using Variant B of the application. This variant focuses more on LSTM and tree-based algorithms."
     )
 
 symbol = st.text_input("Enter VietNam Stock Symbol (e.g., VND):", "VND")
@@ -223,6 +290,11 @@ try:
     col1, col2 = st.columns([1, 1])
 
     with col1:
+        if st.checkbox("Run Shadow Test"):
+            shadow_test_allowed = True
+        else:
+            shadow_test_allowed = False
+
         if st.button("Generate Predictions"):
             with st.spinner("Training multiple models and generating predictions..."):
                 predictor = MultiAlgorithmStockPredictor(
@@ -405,6 +477,10 @@ try:
                     with risk_col2:
                         st.metric("Risk Level", risk_level)
 
+                # Shadow testing
+                if shadow_test_allowed:
+                    run_shadow_test(selected_weight, variant, results, current_price)
+
         ####-chart stock-############################################
     # Đảm bảo 'Date' là kiểu datetime
     df["Date"] = pd.to_datetime(df["time"])
@@ -439,39 +515,35 @@ try:
     # Hiển thị biểu đồ trong Streamlit
     st.subheader("Stock Price Chart")
     st.pyplot(fig)
-    
-    # Rate variant
-    if st.button("Rate Variant"):
-        st.write("What do you think about this variant?")
-        stx.RatingComponent(key="variant-rating")
+
 except Exception as e:
     st.error(f"Error: {str(e)}")
     st.write("Detailed error information:", str(e))
 st.markdown("---")
 
 # Rating
-import os
 
 # CSV file path
 RATINGS_LOG = "ratings_log.csv"
 
 # Ensure CSV file exists
 if not os.path.exists(RATINGS_LOG):
-    pd.DataFrame(columns=["User ID", "Rating", "Comment"]).to_csv(RATINGS_LOG, index=False)
+    pd.DataFrame(columns=["User ID", "Rating", "Comment"]).to_csv(
+        RATINGS_LOG, index=False
+    )
 
 st.title("Rate This Prediction")
 
 # User rating input
-variant_version = get_variant()
 rating = st.slider("Rate the prediction:", min_value=1, max_value=5, step=1)
 comment = st.text_area("Optional comment:")
 
 if st.button("Submit Rating"):
     # Append rating to CSV
-    new_entry = pd.DataFrame([{"Variant": variant_version, "Rating": rating, "Comment": comment}])
+    new_entry = pd.DataFrame(
+        [{"Variant": variant, "Rating": rating, "Comment": comment}]
+    )
     new_entry.to_csv(RATINGS_LOG, mode="a", header=False, index=False)
     st.success("Thank you for your feedback! 🎉")
 
 st.markdown("---")
-
-
