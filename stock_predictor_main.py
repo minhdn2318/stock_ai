@@ -528,7 +528,7 @@ RATINGS_LOG = "ratings_log.csv"
 
 # Ensure CSV file exists
 if not os.path.exists(RATINGS_LOG):
-    pd.DataFrame(columns=["User ID", "Rating", "Comment"]).to_csv(
+    pd.DataFrame(columns=["Variant", "Rating", "Comment"]).to_csv(
         RATINGS_LOG, index=False
     )
 
