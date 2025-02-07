@@ -22,9 +22,9 @@ import logging
 
 tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
 
-st.set_page_config(page_title="Multi-Algorithm Stock Predictor GROUP 7 - VNU", layout="wide")
+st.set_page_config(page_title="Multi-Algorithm Stock Predictor GROUP 6 - 2425I_INT7024 - VNU", layout="wide")
 st.markdown(
-    "<h1 style='text-align: center;'>Multi-Algorithm Stock Predictor GROUP 7 - VNU </h1>",
+    "<h1 style='text-align: center;'>Multi-Algorithm Stock Predictor GROUP 6 - 2425I_INT7024 - VNU </h1>",
     unsafe_allow_html=True
 )
 
