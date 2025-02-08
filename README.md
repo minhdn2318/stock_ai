@@ -198,7 +198,7 @@ Hệ thống tạo tín hiệu giao dịch dựa trên:
   - Tín hiệu yếu: Biến động dự đoán 1-3%
   - Tín hiệu giữ nguyên: Biến động dự đoán <1%
 
-- Điểm Tin Cậy (**PConfidence Score**)
+- Điểm Tin Cậy (**Confidence Score**)
 
   - Tin cậy cao: >0.8
   - Tin cậy trung bình: 0.6-0.8
