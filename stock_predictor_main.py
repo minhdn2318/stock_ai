@@ -205,7 +205,7 @@ try:
                     current_price = df["close"].iloc[-1] if not df.empty else 0
                     # Tính biên lợi nhuận
                     profit_margin = (
-                        (abs(results["prediction"] - current_price) / current_price)
+                        ((results["prediction"] - current_price) / current_price)
                         * 100
                         if current_price != 0
                         else 0

@@ -119,7 +119,7 @@ uv pip install -r requirements.txt
 uv streamlit run stock_predictor_main.py
 ```
 
-Nếu bạn không dùng UV, hãy xem các hướng dẫn dưới đây.
+### 🤔 Nếu bạn không dùng UV, hãy xem các hướng dẫn dưới đây.
 
 ### 🐍 Cài Đặt Python 3.11  
 
