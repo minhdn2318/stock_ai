@@ -7,7 +7,7 @@ from statsmodels.tsa.arima.model import ARIMA
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import LSTM, Dense, Dropout, Bidirectional
 from tensorflow.keras.callbacks import EarlyStopping
-import weight_configurations
+import models.weight_configurations as weight_configurations
 from datetime import datetime, timedelta
 import yfinance as yf
 import numpy as np
@@ -15,9 +15,77 @@ import pandas as pd
 from vnstock import Vnstock
 import streamlit as st
 import logging
+import os
 
 WEIGHT_CONFIGURATIONS = weight_configurations.WEIGHT_CONFIGURATIONS
 
+
+# Run shadow test
+def run_shadow_test(symbol, selected_weight, user_variant, user_results, current_price):
+    # Shadow variant
+    shadow_variant = "A" if user_variant == "B" else "B"
+
+    # Calculate shadow predictions
+    SHADOW_WEIGHT_CONFIGURATIONS = (
+        weight_configurations.WEIGHT_CONFIGURATIONS
+        if user_variant == "B"
+        else weight_configurations.WEIGHT_CONFIGURATIONS_BETA
+    )
+
+    with st.spinner("Thank you for enabling the Shadow Test. Running the test..."):
+        shadow_predictions = MultiAlgorithmStockPredictor(
+            symbol, weights=SHADOW_WEIGHT_CONFIGURATIONS[selected_weight]
+        ).predict_with_all_models()
+
+    shadow_results = shadow_predictions["prediction"]
+    user_prediction = user_results["prediction"]
+
+    # Calculate the deviation
+    dev_shadow = abs(shadow_results - current_price)
+    dev_user = abs(user_prediction - current_price)
+
+    # Determine the conclusion
+    if dev_shadow == dev_user:
+        conclusion = (
+            "Tie as both predictions are equal, with the deviation of {:.2f}".format(
+                dev_shadow
+            )
+        )
+    elif dev_shadow < dev_user:
+        conclusion = "Shadow model wins with a deviation of {:.2f}".format(dev_shadow)
+    else:
+        conclusion = "User model wins with a deviation of {:.2f}".format(dev_user)
+
+    # CSV file path
+    SHADOW_LOG = "logs/shadow_log.csv"
+
+    # Ensure CSV file exists
+    if not os.path.exists(SHADOW_LOG):
+        pd.DataFrame(
+            columns=[
+                "Time",
+                "User Variant & Perf",
+                "Shadow Variant & Perf",
+                "Current Price",
+                "Conclusion",
+            ]
+        ).to_csv(SHADOW_LOG, index=False)
+
+    # Append rating to CSV
+    new_entry = pd.DataFrame(
+        [
+            {
+                "Time": datetime.now(),
+                "User Variant & Perf": f"{user_variant} - {user_prediction:.2f}",
+                "Shadow Variant & Perf": f"{shadow_variant} - {shadow_results:.2f}",
+                "Current Price": current_price,
+                "Conclusion": conclusion,
+            }
+        ]
+    )
+    new_entry.to_csv(SHADOW_LOG, mode="a", header=False, index=False)
+
+# The multi-algorithm stock predictor class
 class MultiAlgorithmStockPredictor:
     def __init__(self, symbol, training_years=5, weights=None):
         self.symbol = symbol
