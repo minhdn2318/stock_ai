@@ -21,7 +21,7 @@ WEIGHT_CONFIGURATIONS = weight_configurations.WEIGHT_CONFIGURATIONS
 
 
 # Run shadow test
-def run_shadow_test(symbol, selected_weight, user_variant, user_results, current_price):
+def run_shadow_test(symbol, selected_weight, user_variant, user_results, current_price, end_date):
     # Shadow variant
     shadow_variant = "A" if user_variant == "B" else "B"
 
@@ -34,7 +34,7 @@ def run_shadow_test(symbol, selected_weight, user_variant, user_results, current
 
     with st.spinner("Thank you for enabling the Shadow Test. Running the test..."):
         shadow_predictions = MultiAlgorithmStockPredictor(
-            symbol, weights=SHADOW_WEIGHT_CONFIGURATIONS[selected_weight]
+            symbol, weights=SHADOW_WEIGHT_CONFIGURATIONS[selected_weight], end_date=end_date
         ).predict_with_all_models()
 
     shadow_results = shadow_predictions["prediction"]
@@ -87,17 +87,18 @@ def run_shadow_test(symbol, selected_weight, user_variant, user_results, current
 
 # The multi-algorithm stock predictor class
 class MultiAlgorithmStockPredictor:
-    def __init__(self, symbol, training_years=5, weights=None):
+    def __init__(self, symbol, training_years=5, weights=None, end_date=datetime.now()):
         self.symbol = symbol
         self.training_years = training_years
         self.scaler = MinMaxScaler(feature_range=(0, 1))
         self.weights = (
             weights if weights is not None else WEIGHT_CONFIGURATIONS["Default"]
         )
+        self.end_date = end_date
 
-    def fetch_historical_data_from_yahoo(self):
+    def fetch_historical_data_from_yahoo(self, end_date=datetime.now()):
         # Same as original EnhancedStockPredictor
-        end_date = datetime.now()
+        end_date = self.end_date
         start_date = end_date - timedelta(days=365 * self.training_years)
 
         try:
@@ -114,7 +115,7 @@ class MultiAlgorithmStockPredictor:
 
     def fetch_historical_data_from_vnstock(self):
         # Same as original EnhancedStockPredictor
-        end_date = datetime.now()
+        end_date = self.end_date
         start_date = end_date - timedelta(days=365 * self.training_years)
 
         try:

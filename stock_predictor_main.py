@@ -1,3 +1,4 @@
+from datetime import datetime
 import pandas as pd
 import streamlit as st
 import tensorflow as tf
@@ -156,9 +157,12 @@ try:
             shadow_test_allowed = False
 
         if st.button("Generate Predictions"):
+            # Save end_date for both predictions and shadow test
+            end_date = datetime.now()
+
             with st.spinner("Training multiple models and generating predictions..."):
                 predictor = MultiAlgorithmStockPredictor(
-                    symbol, weights=WEIGHT_CONFIGURATIONS[selected_weight]
+                    symbol, weights=WEIGHT_CONFIGURATIONS[selected_weight], end_date=end_date
                 )
                 results = predictor.predict_with_all_models()
 
@@ -238,7 +242,7 @@ try:
                 # Shadow testing
                 if shadow_test_allowed:
                     run_shadow_test(
-                        symbol, selected_weight, variant, results, current_price
+                        symbol, selected_weight, variant, results, current_price, end_date
                     )
 
     ####-chart stock-############################################
