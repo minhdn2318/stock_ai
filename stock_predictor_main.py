@@ -40,7 +40,8 @@ logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s - %(levelname)s - %(message)s",
     handlers=[
-        logging.StreamHandler()  # In log ra màn hình
+        logging.StreamHandler(),  # In log ra màn hình
+        logging.FileHandler("logs/app.log"),  # Lưu log vào file app.log
     ],
 )
 
