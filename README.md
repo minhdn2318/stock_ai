@@ -244,5 +244,7 @@ Hệ thống tạo tín hiệu giao dịch dựa trên:
 - **Thử nghiệm ẩn** (Shadow Testing): Vì hệ thống hiện tại chưa thể triển khai đa luồng cho việc dự đoán song song (so sánh mô hình ẩn và mô hình người dùng sử dụng), nhóm đã đặt cơ chế cho phép người dùng "giúp nhà phát triển" bằng cách gửi dữ liệu dự đoán về mô hình ẩn cho nhóm phân tích và cải thiện mô hình (sau khi đã thực thi xong việc huấn luyện và dự đoán ở mô hình chính).
 ![](demo/runshadowtest.PNG)
 
+- **Video Demo**: [Xem tại đây](demo/Stock%20Video.mp4)
+
 ---  
 ⚠️ **Miễn Trừ Trách Nhiệm:** Công cụ này chỉ dành cho mục đích **nghiên cứu & giáo dục**. Hãy luôn tự nghiên cứu và tham khảo ý kiến chuyên gia tài chính trước khi đưa ra quyết định đầu tư.
