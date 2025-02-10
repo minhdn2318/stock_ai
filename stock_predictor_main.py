@@ -2,6 +2,7 @@ from datetime import datetime
 import pandas as pd
 import streamlit as st
 import tensorflow as tf
+print(tf.__version__)
 import logging
 import extra_streamlit_components as stx
 from utils.cookie import get_variant
