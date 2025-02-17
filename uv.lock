@@ -1,5 +1,7 @@
 version = 1
 requires-python = ">=3.11"
+[dependencies]
+tensorflow = "2.18.0"
 
 [[package]]
 name = "stock-ai"

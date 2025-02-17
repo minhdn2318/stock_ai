@@ -161,3 +161,46 @@
 247 2025-02-06  12.60  13.15  12.55  12.90  21492845
 248 2025-02-07  13.00  13.00  12.70  12.80   7695824
 249 2025-02-10  12.70  12.80  12.55  12.60  12048700
+2025-02-10 17:25:52,322 - INFO - Fetching stock data for VND from 2024-08-14 to 2025-02-10...
+2025-02-10 17:25:53,237 - INFO - Successfully fetched 250 rows of data for VND.
+2025-02-10 17:25:53,248 - INFO - Last 5 rows of the data from Vnstock:
+          time   open   high    low  close    volume
+245 2025-02-04  11.75  12.40  11.70  12.40  19398838
+246 2025-02-05  12.60  12.75  12.35  12.45  15799792
+247 2025-02-06  12.60  13.15  12.55  12.90  21492845
+248 2025-02-07  13.00  13.00  12.70  12.80   7695824
+249 2025-02-10  12.70  12.80  12.55  12.60  12048700
+2025-02-10 21:03:57,297 - ERROR - Task exception was never retrieved
+future: <Task finished name='Task-1963' coro=<WebSocketProtocol13.write_message.<locals>.wrapper() done, defined at C:\Users\PC\AppData\Local\Programs\Python\Python311\Lib\site-packages\tornado\websocket.py:1086> exception=WebSocketClosedError()>
+Traceback (most recent call last):
+  File "C:\Users\PC\AppData\Local\Programs\Python\Python311\Lib\site-packages\tornado\websocket.py", line 1088, in wrapper
+    await fut
+tornado.iostream.StreamClosedError: Stream is closed
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\PC\AppData\Local\Programs\Python\Python311\Lib\site-packages\tornado\websocket.py", line 1090, in wrapper
+    raise WebSocketClosedError()
+tornado.websocket.WebSocketClosedError
+2025-02-10 21:03:57,516 - INFO - Fetching stock data for VND from 2024-08-14 to 2025-02-10...
+2025-02-10 21:03:58,173 - INFO - Fetching stock data for VND from 2024-08-14 to 2025-02-10...
+2025-02-10 21:03:59,663 - INFO - Fetching stock data for VND from 2024-08-14 to 2025-02-10...
+2025-02-10 21:20:04,477 - INFO - Fetching stock data for VND from 2024-08-14 to 2025-02-10...
+2025-02-10 21:20:06,579 - INFO - Successfully fetched 250 rows of data for VND.
+2025-02-10 21:20:06,592 - INFO - Last 5 rows of the data from Vnstock:
+          time   open   high    low  close    volume
+245 2025-02-04  11.75  12.40  11.70  12.40  19398838
+246 2025-02-05  12.60  12.75  12.35  12.45  15799792
+247 2025-02-06  12.60  13.15  12.55  12.90  21492845
+248 2025-02-07  13.00  13.00  12.70  12.80   7695824
+249 2025-02-10  12.70  12.80  12.55  12.60  12048700
+2025-02-17 16:06:36,468 - INFO - Fetching stock data for VND from 2024-08-21 to 2025-02-17...
+2025-02-17 16:06:37,956 - INFO - Successfully fetched 250 rows of data for VND.
+2025-02-17 16:06:37,978 - INFO - Last 5 rows of the data from Vnstock:
+          time   open   high    low  close    volume
+245 2025-02-11  12.60  12.75  12.55  12.65   8105478
+246 2025-02-12  12.65  12.95  12.65  12.70   7639640
+247 2025-02-13  12.70  12.75  12.55  12.65   8849351
+248 2025-02-14  12.75  12.90  12.70  12.75  11917438
+249 2025-02-17  12.80  13.30  12.75  13.10  24770300
